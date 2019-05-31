@@ -1,13 +1,6 @@
 <template>
-  <div
-    :class="{fullscreen:fullscreen}"
-    class="tinymce-container"
-    :style="{width:containerWidth}"
-  >
-    <textarea
-      :id="tinymceId"
-      class="tinymce-textarea"
-    />
+  <div :class="{fullscreen:fullscreen}" class="tinymce-container" :style="{width:containerWidth}">
+    <textarea :id="tinymceId" class="tinymce-textarea" />
     <div class="editor-custom-btn-container">
       <editorImage color="#1890ff" class="editor-upload-btn" @successCBK="imageSuccessCBK" />
     </div>
@@ -22,10 +15,7 @@
 import editorImage from './components/EditorImage'
 import plugins from './plugins'
 import toolbar from './toolbar'
-import load from './dynamicLoadScript'
-// why use this cdn, detail see https://github.com/PanJiaChen/tinymce-all-in-one
-const tinymceCDN =
-  'https://cdn.jsdelivr.net/npm/tinymce-all-in-one@4.9.3/tinymce.min.js'
+
 export default {
   name: 'Tinymce',
   components: { editorImage },
@@ -33,11 +23,7 @@ export default {
     id: {
       type: String,
       default: function() {
-        return (
-          'vue-tinymce-' +
-          +new Date() +
-          ((Math.random() * 1000).toFixed(0) + '')
-        )
+        return 'vue-tinymce-' + +new Date() + ((Math.random() * 1000).toFixed(0) + '')
       }
     },
     value: {
@@ -73,18 +59,20 @@ export default {
       tinymceId: this.id,
       fullscreen: false,
       languageTypeList: {
-        en: 'en',
-        zh: 'zh_CN',
-        es: 'es_MX',
-        ja: 'ja'
+        'en': 'en',
+        'zh': 'zh_CN',
+        'es': 'es_MX',
+        'ja': 'ja'
       }
     }
   },
   computed: {
+    language() {
+      return this.languageTypeList[this.$store.getters.language]
+    },
     containerWidth() {
       const width = this.width
-      if (/^[\d]+(\.[\d]+)?$/.test(width)) {
-        // matches `100`, `'100'`
+      if (/^[\d]+(\.[\d]+)?$/.test(width)) { // matches `100`, `'100'`
         return `${width}px`
       }
       return width
@@ -94,18 +82,19 @@ export default {
     value(val) {
       if (!this.hasChange && this.hasInit) {
         this.$nextTick(() =>
-          window.tinymce.get(this.tinymceId).setContent(val || '')
-        )
+          window.tinymce.get(this.tinymceId).setContent(val || ''))
       }
+    },
+    language() {
+      this.destroyTinymce()
+      this.$nextTick(() => this.initTinymce())
     }
   },
   mounted() {
-    this.init()
+    this.initTinymce()
   },
   activated() {
-    if (window.tinymce) {
-      this.initTinymce()
-    }
+    this.initTinymce()
   },
   deactivated() {
     this.destroyTinymce()
@@ -114,21 +103,11 @@ export default {
     this.destroyTinymce()
   },
   methods: {
-    init() {
-      // dynamic load tinymce from cdn
-      load(tinymceCDN, err => {
-        if (err) {
-          this.$message.error(err.message)
-          return
-        }
-        this.initTinymce()
-      })
-    },
     initTinymce() {
       const _this = this
       window.tinymce.init({
+        language: this.language,
         selector: `#${this.tinymceId}`,
-        language: this.languageTypeList['en'],
         height: this.height,
         body_class: 'panel-body ',
         object_resizing: false,
@@ -156,7 +135,7 @@ export default {
           })
         },
         setup(editor) {
-          editor.on('FullscreenStateChanged', e => {
+          editor.on('FullscreenStateChanged', (e) => {
             _this.fullscreen = e.state
           })
         }
@@ -200,6 +179,7 @@ export default {
       if (this.fullscreen) {
         tinymce.execCommand('mceFullScreen')
       }
+
       if (tinymce) {
         tinymce.destroy()
       }
@@ -213,9 +193,7 @@ export default {
     imageSuccessCBK(arr) {
       const _this = this
       arr.forEach(v => {
-        window.tinymce
-          .get(_this.tinymceId)
-          .insertContent(`<img class="wscnph" src="${v.url}" >`)
+        window.tinymce.get(_this.tinymceId).insertContent(`<img class="wscnph" src="${v.url}" >`)
       })
     }
   }
@@ -227,7 +205,7 @@ export default {
   position: relative;
   line-height: normal;
 }
-.tinymce-container >>> .mce-fullscreen {
+.tinymce-container>>>.mce-fullscreen {
   z-index: 10000;
 }
 .tinymce-textarea {
